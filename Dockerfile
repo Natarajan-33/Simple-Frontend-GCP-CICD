@@ -1,14 +1,28 @@
-# Stage 1: Build the frontend
-FROM node:18 AS build
+# Build stage
+FROM node:18-alpine AS build
+
 WORKDIR /app
-COPY . .
+
+COPY package*.json ./
+
 RUN npm install
+
+COPY . .
+
 RUN npm run build
 
-# Stage 2: Serve the built files
-FROM node:18-alpine AS production
-RUN npm install -g serve
+# Production stage with serve
+FROM node:18-alpine
+
 WORKDIR /app
+
+RUN npm install -g serve
+
 COPY --from=build /app/dist .
+
+# Cloud Run expects the app to listen on $PORT
+ENV PORT 8080
+
 EXPOSE 8080
+
 CMD ["serve", "-s", ".", "-l", "8080"]
