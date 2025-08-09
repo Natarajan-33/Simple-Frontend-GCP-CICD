@@ -1,4 +1,4 @@
-name: Deploy Backend to Cloud Run
+name: Deploy Frontend to Cloud Run
 
 on:
   push:
@@ -14,6 +14,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Create .env.production for Vite
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > .env.production
 
       - name: Authenticate to Google Cloud (WIF)
         uses: google-github-actions/auth@v2
@@ -35,7 +39,7 @@ jobs:
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           REPO=quote-app
-          IMG=us-central1-docker.pkg.dev/${PROJECT_ID}/${REPO}/backend-app
+          IMG=us-central1-docker.pkg.dev/${PROJECT_ID}/${REPO}/frontend-app
           docker build -t $IMG:latest -t $IMG:${{ github.sha }} .
           docker push $IMG:latest
           docker push $IMG:${{ github.sha }}
@@ -43,7 +47,7 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy backend-service \
+          gcloud run deploy frontend-service \
             --image="${IMAGE}" \
             --platform=managed \
             --region=${{ secrets.GCP_REGION }} \
